@@ -1,0 +1,13 @@
+---
+
+common:
+  k8s_namespace: "kube-system"
+
+  app_name: "kube-router"
+  image_version: "v0.2.5"
+
+kube-router:
+  templates:
+  - template: "serviceaccount.yaml.j2"
+  - template: "rbac.yaml.j2"
+  - template: "daemonset.yaml.j2"
