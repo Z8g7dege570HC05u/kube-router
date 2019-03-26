@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ app_name }}
+  namespace: kube-system
+  labels:
+    k8s-app: {{ app_name }}
+spec:
+  selector:
+    matchLabels:
+      k8s-app: {{ app_name }}
+  template:
+    metadata:
+      labels:
+        k8s-app: {{ app_name }}
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+    spec:
+      serviceAccountName: {{ app_name }}
+      hostNetwork: true
+      containers:
+      - name: {{ app_name }}
+        image: docker.io/cloudnativelabs/kube-router:{{ image_version }}
+        args:
+        - --run-router=false
+        - --run-firewall=true
+        - --run-service-proxy=false
+        - --v=3
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          privileged: true
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 20244
+          initialDelaySeconds: 180
+          periodSeconds: 30
+          timeoutSeconds: 30
+          successThreshold: 1
+          failureThreshold: 3
+  minReadySeconds: 0
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
